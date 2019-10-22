@@ -1,11 +1,13 @@
-import deepprofiler.dataset.compression
-import numpy
-import numpy.testing
-import numpy.random
-import pytest
 import glob
 import os.path
+
+import numpy
+import numpy.random
+import numpy.testing
+import pytest
 import skimage.io
+
+import deepprofiler.dataset.compression
 
 
 @pytest.fixture(scope="function")
@@ -88,11 +90,11 @@ def test_process_image(compress, out_dir):
         "ER": "/tmp/er.tiff",
         "Mito": "/tmp/mito.tiff"
     }
-    compress.stats["illum_correction_function"] = numpy.ones((16,16,3))
+    compress.stats["illum_correction_function"] = numpy.ones((16, 16, 3))
     compress.stats["upper_percentiles"] = [255, 255, 255]
     compress.stats["lower_percentiles"] = [0, 0, 0]
     compress.process_image(0, image, meta)
-    filenames = glob.glob(os.path.join(out_dir,"*"))
+    filenames = glob.glob(os.path.join(out_dir, "*"))
     real_filenames = [os.path.join(out_dir, x) for x in ["dna.png", "er.png", "mito.png"]]
     filenames.sort()
 
@@ -101,6 +103,6 @@ def test_process_image(compress, out_dir):
     for i in range(3):
         assert os.path.exists(filenames[i])
         data = skimage.io.imread(filenames[i])
-        numpy.testing.assert_allclose(image[:,:,i], data, rtol=0.04, atol=0)
-        geq = (data >= image[:,:,i])
+        numpy.testing.assert_allclose(image[:, :, i], data, rtol=0.04, atol=0)
+        geq = (data >= image[:, :, i])
         assert numpy.count_nonzero(geq) == geq.size

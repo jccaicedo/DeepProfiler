@@ -1,105 +1,119 @@
 {
-    "dataset": {
-        "metadata": {
-            "label_field": "Compound_Concentration",
-            "control_id": "17"
-        },
-        "images": {
-            "channels": [
-                "R",
-                "G",
-                "B"
-              ],
-            "file_format": "tif",
-            "width": 128,
-            "height": 128,
-            "bits": 16
-        }
+  "dataset": {
+    "metadata": {
+      "label_field": "Compound_Concentration",
+      "control_id": "17"
     },
-    "prepare": {
-        "illumination_correction": {
-            "down_scale_factor": 4,
-            "median_filter_size": 24
-        },
-        "compression": {
-            "implement": true,
-            "scaling_factor": 1.0
-        }
-    },
-    "train": {
-        "partition": {
-            "targets": [
-                "Class"
-            ],
-            "split_field": "Split",
-            "training_values": [0],
-            "validation_values": [1]
-        },
-        "model": {
-            "name": "cnn",
-            "crop_generator": "crop_generator",
-            "metrics": ["accuracy"],
-            "epochs": 5,
-            "steps": 10,
-            "params": {
-                "learning_rate": 0.0001,
-                "batch_size": 2,
-                "conv_blocks": 1,
-                "feature_dim": 100,
-                "latent_dim": 100,
-                "epsilon_std": 1.0
-            },
-            "lr_schedule" : {
-                "epoch": [1,3,5],
-                "lr": [0.001, 0.0005, 0.0001]
-            }
-        },
-        "sampling": {
-            "images": 12,
-            "locations": 10,
-            "locations_field": "R",
-            "box_size": 16,
-            "field": "Sampling",
-            "mask_objects": false,
-            "alpha": 0.2
-        },
-          "queueing": {
-            "queue_size": 6,
-            "loading_workers": 1
-        },
-        "comet_ml": {
-            "track": false,
-            "api_key": "",
-            "project_name": "test"
-          },
-          "validation": {
-              "top_k": 1,
-              "batch_size": 2,
-              "sample_first_crops" : true
-          }
-    },
-    "profile": {
-      "feature_layer": "features",
-      "checkpoint": "checkpoint_0003.hdf5",
-      "pretrained": false,
-      "batch_size": 2
-    },
-    "paths": {
-        "locations": "/inputs/locations",
-        "config_folder": "/inputs/config",
-        "images": "/inputs/images",
-        "metadata": "/inputs/metadata",
-        "preprocessed": "/inputs/preprocessed",
-        "pretrained": "/inputs/pretrained",
-        "intensities": "/outputs/intensities",
-        "compressed_images": "/outputs/compressed/images",
-        "compressed_metadata": "/outputs/compressed/metadata",
-        "training": "/outputs/training",
-        "checkpoints": "/outputs/training/checkpoints",
-        "logs": "/outputs/training/logs",
-        "summaries": "/outputs/training/summaries",
-        "features": "/outputs/features",
-        "index": "/inputs/metadata/index.csv",
-        "config_file": "/inputs/config/config.json"
+    "images": {
+      "channels": [
+        "R",
+        "G",
+        "B"
+      ],
+      "file_format": "tif",
+      "width": 128,
+      "height": 128,
+      "bits": 16
     }
+  },
+  "prepare": {
+    "illumination_correction": {
+      "down_scale_factor": 4,
+      "median_filter_size": 24
+    },
+    "compression": {
+      "implement": true,
+      "scaling_factor": 1.0
+    }
+  },
+  "train": {
+    "partition": {
+      "targets": [
+        "Class"
+      ],
+      "split_field": "Split",
+      "training_values": [
+        0
+      ],
+      "validation_values": [
+        1
+      ]
+    },
+    "model": {
+      "name": "cnn",
+      "crop_generator": "crop_generator",
+      "metrics": [
+        "accuracy"
+      ],
+      "epochs": 5,
+      "steps": 10,
+      "params": {
+        "learning_rate": 0.0001,
+        "batch_size": 2,
+        "conv_blocks": 1,
+        "feature_dim": 100,
+        "latent_dim": 100,
+        "epsilon_std": 1.0
+      },
+      "lr_schedule": {
+        "epoch": [
+          1,
+          3,
+          5
+        ],
+        "lr": [
+          0.001,
+          0.0005,
+          0.0001
+        ]
+      }
+    },
+    "sampling": {
+      "images": 12,
+      "locations": 10,
+      "locations_field": "R",
+      "box_size": 16,
+      "field": "Sampling",
+      "mask_objects": false,
+      "alpha": 0.2
+    },
+    "queueing": {
+      "queue_size": 6,
+      "loading_workers": 1
+    },
+    "comet_ml": {
+      "track": false,
+      "api_key": "",
+      "project_name": "test"
+    },
+    "validation": {
+      "top_k": 1,
+      "batch_size": 2,
+      "sample_first_crops": true
+    }
+  },
+  "profile": {
+    "feature_layer": "features",
+    "checkpoint": "checkpoint_0003.hdf5",
+    "pretrained": false,
+    "batch_size": 2
+  },
+  "paths": {
+    "locations": "/inputs/locations",
+    "config_folder": "/inputs/config",
+    "images": "/inputs/images",
+    "metadata": "/inputs/metadata",
+    "preprocessed": "/inputs/preprocessed",
+    "pretrained": "/inputs/pretrained",
+    "intensities": "/outputs/intensities",
+    "compressed_images": "/outputs/compressed/images",
+    "compressed_metadata": "/outputs/compressed/metadata",
+    "training": "/outputs/training",
+    "checkpoints": "/outputs/training/checkpoints",
+    "logs": "/outputs/training/logs",
+    "summaries": "/outputs/training/summaries",
+    "features": "/outputs/features",
+    "index": "/inputs/metadata/index.csv",
+    "config_file": "/inputs/config/config.json"
+  }
 }

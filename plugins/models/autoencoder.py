@@ -1,5 +1,3 @@
-from comet_ml import Experiment
-
 import keras
 from keras.layers import *
 from keras.models import Model, Sequential
@@ -52,7 +50,8 @@ def define_model(config, dset):
             Activation("relu"),
             UpSampling2D((2, 2))
         ])
-    decoder_layers.append(Conv2DTranspose(len(config["dataset"]["images"]["channels"]), (3, 3), activation="sigmoid", padding="same"))
+    decoder_layers.append(
+        Conv2DTranspose(len(config["dataset"]["images"]["channels"]), (3, 3), activation="sigmoid", padding="same"))
     decoder = Sequential(decoder_layers, name="decoded")
     decoded = decoder(encoded)
     decoder = Model(decoder_input, decoder(decoder_input))

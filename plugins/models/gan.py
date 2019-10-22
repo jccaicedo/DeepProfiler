@@ -1,19 +1,17 @@
-from comet_ml import Experiment
-import keras
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout
-from keras.layers import BatchNormalization, Activation, ZeroPadding2D
-from keras.layers.advanced_activations import LeakyReLU
-from keras.layers.convolutional import UpSampling2D, Conv2D, MaxPooling2D, Conv2DTranspose
-from keras.models import Sequential, Model
-from keras.optimizers import Adam
 import os
-import gc
+
+import keras
 import numpy as np
 import tensorflow as tf
+from keras.layers import BatchNormalization
+from keras.layers import Input, Dense, Reshape, Flatten
+from keras.layers.advanced_activations import LeakyReLU
+from keras.layers.convolutional import UpSampling2D, Conv2D, MaxPooling2D, Conv2DTranspose
+from keras.models import Model
+from keras.optimizers import Adam
 
 from deepprofiler.learning import model
 from deepprofiler.learning.model import DeepProfilerModel
-import deepprofiler.learning.validation
 
 
 #######################################################
@@ -41,8 +39,8 @@ class GAN(object):
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(loss="binary_crossentropy",
-            optimizer=optimizer,
-            metrics=["accuracy"])  # TODO
+                                   optimizer=optimizer,
+                                   metrics=["accuracy"])  # TODO
 
         # Build the generator
         self.generator = self.build_generator()
@@ -52,7 +50,8 @@ class GAN(object):
         img = self.generator(z)
 
         # For the combined model we will only train the generator
-        self.discriminator_fixed = Model(inputs=self.discriminator.inputs, outputs=self.discriminator.outputs, name="discriminator")
+        self.discriminator_fixed = Model(inputs=self.discriminator.inputs, outputs=self.discriminator.outputs,
+                                         name="discriminator")
         self.discriminator_fixed.trainable = False
         # The discriminator takes generated images as input and determines validity
         validity = self.discriminator_fixed(img)
@@ -131,10 +130,12 @@ class GAN(object):
                 g_loss = self.combined.train_on_batch(noise, valid)
 
                 # Plot the progress
-                print("Epoch %d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[1], g_loss))
+                print("Epoch %d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100 * d_loss[1], g_loss))
 
-            filename_d = os.path.join(self.config["paths"]["checkpoints"], "{}_epoch_{:04d}.hdf5".format("discriminator", epoch))
-            filename_g = os.path.join(self.config["paths"]["checkpoints"], "{}_epoch_{:04d}.hdf5".format("generator", epoch))
+            filename_d = os.path.join(self.config["paths"]["checkpoints"],
+                                      "{}_epoch_{:04d}.hdf5".format("discriminator", epoch))
+            filename_g = os.path.join(self.config["paths"]["checkpoints"],
+                                      "{}_epoch_{:04d}.hdf5".format("generator", epoch))
             self.discriminator.save_weights(filename_d)
             self.generator.save_weights(filename_g)
 
@@ -149,12 +150,14 @@ class ModelClass(DeepProfilerModel):
         model.check_feature_model(self)
         self.gan.combined.summary()
         experiment = model.setup_comet_ml(self)  # TODO: comet ml doesn't currently work with this model
-        configuration = model.tf_configure(self)
+        configuration = model.tf_configure()
         crop_session = model.start_crop_session(self, configuration)
         # TODO: no validation
         main_session = model.start_main_session(configuration)
-        discriminator_file = os.path.join(self.config["paths"]["checkpoints"], "{}_epoch_{:04d}.hdf5".format("discriminator", epoch - 1))
-        generator_file = os.path.join(self.config["paths"]["checkpoints"], "{}_epoch_{:04d}.hdf5".format("generator", epoch - 1))
+        discriminator_file = os.path.join(self.config["paths"]["checkpoints"],
+                                          "{}_epoch_{:04d}.hdf5".format("discriminator", epoch - 1))
+        generator_file = os.path.join(self.config["paths"]["checkpoints"],
+                                      "{}_epoch_{:04d}.hdf5".format("generator", epoch - 1))
         if epoch >= 1 and os.path.isfile(discriminator_file) and os.path.isfile(generator_file):
             self.gan.discriminator.load_weights(discriminator_file)
             self.gan.generator.load_weights(generator_file)

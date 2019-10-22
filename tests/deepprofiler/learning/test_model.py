@@ -1,16 +1,16 @@
 import importlib
+import json
 import os
 import random
-import json
 
 import numpy as np
 import pandas as pd
 import pytest
 import skimage.io
 
-import deepprofiler.dataset.target
-import deepprofiler.dataset.metadata
 import deepprofiler.dataset.image_dataset
+import deepprofiler.dataset.metadata
+import deepprofiler.dataset.target
 import deepprofiler.imaging.cropping
 from deepprofiler.learning.model import DeepProfilerModel
 
@@ -33,12 +33,14 @@ def config(out_dir):
     config["paths"]["root_dir"] = out_dir
     return config
 
+
 @pytest.fixture(scope="function")
 def make_struct(config):
     for key, path in config["paths"].items():
         if key not in ["index", "config_file", "root_dir"]:
-            os.makedirs(path+"/")
+            os.makedirs(path + "/")
     return
+
 
 @pytest.fixture(scope="function")
 def metadata(out_dir, make_struct):
@@ -58,14 +60,15 @@ def metadata(out_dir, make_struct):
     meta = deepprofiler.dataset.metadata.Metadata(filename)
     train_rule = lambda data: data["Split"].astype(int) == 0
     val_rule = lambda data: data["Split"].astype(int) == 1
-    meta.splitMetadata(train_rule, val_rule)
+    meta.split_metadata(train_rule, val_rule)
     return meta
 
 
 @pytest.fixture(scope="function")
 def dataset(metadata, out_dir, config, make_struct):
     keygen = lambda r: "{}/{}-{}".format(r["Metadata_Plate"], r["Metadata_Well"], r["Metadata_Site"])
-    dset = deepprofiler.dataset.image_dataset.ImageDataset(metadata, "Sampling", ["R", "G", "B"], config["paths"]["root_dir"], keygen)
+    dset = deepprofiler.dataset.image_dataset.ImageDataset(metadata, "Sampling", ["R", "G", "B"],
+                                                           config["paths"]["root_dir"], keygen)
     target = deepprofiler.dataset.target.MetadataColumnTarget("Class", metadata.data["Class"].unique())
     dset.add_target(target)
     return dset
@@ -87,8 +90,9 @@ def locations(out_dir, metadata, config, make_struct):
         path = os.path.abspath(os.path.join(config["paths"]["locations"], meta["Metadata_Plate"]))
         os.makedirs(path, exist_ok=True)
         path = os.path.abspath(os.path.join(path, "{}-{}-{}.csv".format(meta["Metadata_Well"],
-                                                  meta["Metadata_Site"],
-                                                  config["train"]["sampling"]["locations_field"])))
+                                                                        meta["Metadata_Site"],
+                                                                        config["train"]["sampling"][
+                                                                            "locations_field"])))
         locs = pd.DataFrame({
             "R_Location_Center_X": np.random.randint(0, 128, (config["train"]["sampling"]["locations"])),
             "R_Location_Center_Y": np.random.randint(0, 128, (config["train"]["sampling"]["locations"]))
@@ -119,6 +123,7 @@ def model(config, dataset, crop_generator, val_crop_generator):
         importlib.invalidate_caches()
         dpmodel = module.ModelClass(config, dataset, crop_generator, val_crop_generator)
         return dpmodel
+
     return create
 
 

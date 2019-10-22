@@ -1,10 +1,11 @@
 import os
 import random
 
-import deepprofiler.dataset.metadata
 import numpy as np
 import pandas as pd
 import pytest
+
+import deepprofiler.dataset.metadata
 
 
 def __rand_array():
@@ -60,7 +61,7 @@ def test_read_plates(out_dir):
 def test_load_single(metadata, dataframe, out_dir):
     filename = os.path.join(out_dir, "test.csv")
     assert os.path.exists(filename)
-    metadata.loadSingle(filename, "default", int)
+    metadata.load_single(filename, "default", int)
     pd.testing.assert_frame_equal(metadata.data, dataframe)
 
 
@@ -80,34 +81,34 @@ def test_load_multiple(metadata, dataframe, out_dir):
     assert os.path.exists(csv1)
     assert os.path.exists(csv2)
     assert os.path.exists(filelist)
-    metadata.loadMultiple(filelist, "default", int)
+    metadata.load_multiple(filelist, "default", int)
     concat = pd.concat([dataframe, dataframe2])
     pd.testing.assert_frame_equal(metadata.data, concat)
 
 
 def test_filter_records(metadata, dataframe, out_dir):
-    metadata.loadSingle(os.path.join(out_dir, "test.csv"), "default", int)
+    metadata.load_single(os.path.join(out_dir, "test.csv"), "default", int)
     rule = lambda data: map(lambda row: any(row % 2 == 0), data.values)
-    metadata.filterRecords(rule)
+    metadata.filter_records(rule)
     filtered = dataframe.loc[rule(dataframe), :]
     pd.testing.assert_frame_equal(metadata.data, filtered)
 
 
 def test_split_metadata(metadata, dataframe, out_dir):
-    metadata.loadSingle(os.path.join(out_dir, "test.csv"), "default", int)
+    metadata.load_single(os.path.join(out_dir, "test.csv"), "default", int)
     train_rule = lambda data: data["Metadata_Plate"] < 50
     val_rule = lambda data: data["Metadata_Plate"] >= 50
-    metadata.splitMetadata(train_rule, val_rule)
+    metadata.split_metadata(train_rule, val_rule)
     assert len(metadata.train) + len(metadata.val) == len(metadata.data)
 
 
 def test_merge_outlines(metadata, dataframe, out_dir):
-    metadata.loadSingle(os.path.join(out_dir, "test.csv"), "default", int)
+    metadata.load_single(os.path.join(out_dir, "test.csv"), "default", int)
     outlines = pd.DataFrame({
         "Metadata_Plate": __rand_array(),
         "Metadata_Well": __rand_array(),
         "Metadata_Site": __rand_array()
     }, dtype=int)
-    metadata.mergeOutlines(outlines)
+    metadata.merge_outlines(outlines)
     merged = pd.merge(metadata.data, outlines, on=["Metadata_Plate", "Metadata_Well", "Metadata_Site"])
     pd.testing.assert_frame_equal(metadata.data, merged)

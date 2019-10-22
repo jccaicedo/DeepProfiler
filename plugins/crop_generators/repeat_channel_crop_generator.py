@@ -1,7 +1,8 @@
 import numpy as np
 import tensorflow as tf
+
 import deepprofiler.imaging.cropping
-from keras.applications import inception_resnet_v2
+
 
 def repeat_channels(crops):
     resized_crops = tf.image.resize_images(crops, size=(299, 299))
@@ -28,10 +29,9 @@ class SingleImageGeneratorClass(deepprofiler.imaging.cropping.SingleImageCropGen
         self.resized = repeat_channels(self.crop_ph)
 
     def generate(self, session, global_step=0):
-        crops = session.run(self.resized, feed_dict={self.crop_ph:self.image_pool})
-        labels = np.tile(self.label_pool, [3,1])
+        crops = session.run(self.resized, feed_dict={self.crop_ph: self.image_pool})
+        labels = np.tile(self.label_pool, [3, 1])
 
         global_step += 1
 
         yield (crops, labels)
-

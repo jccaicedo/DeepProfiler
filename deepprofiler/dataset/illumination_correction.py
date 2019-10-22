@@ -1,12 +1,11 @@
-import skimage.transform
+import numpy as np
+import scipy.stats
 import skimage.filters
 import skimage.morphology
-import scipy.stats
-import numpy as np
+import skimage.transform
 
-#################################################
-## ILLUMINATION CORRECTION FUNCTION
-#################################################
+
+# ILLUMINATION CORRECTION FUNCTION
 
 
 class IlluminationCorrection(object):
@@ -18,11 +17,12 @@ class IlluminationCorrection(object):
 
     # Based on Sing et al. 2014 paper
     def channel_function(self, mean_channel, disk_size):
-        #TODO: get np.type from other source or parameterize or compute :/
+        # TODO: get np.type from other source or parameterize or compute :/
         # We currently assume 16 bit images
         operator = skimage.morphology.disk(disk_size)
         filtered_channel = skimage.filters.median(mean_channel.astype(np.uint16), operator)
-        filtered_channel = skimage.transform.resize(filtered_channel, self.target_dim, mode="reflect", anti_aliasing=True, preserve_range=True)
+        filtered_channel = skimage.transform.resize(filtered_channel, self.target_dim, mode="reflect",
+                                                    anti_aliasing=True, preserve_range=True)
         robust_minimum = scipy.stats.scoreatpercentile(filtered_channel, 2)
         filtered_channel = np.maximum(filtered_channel, robust_minimum)
         illum_corr_func = filtered_channel / robust_minimum

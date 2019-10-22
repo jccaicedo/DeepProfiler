@@ -1,17 +1,16 @@
-from comet_ml import Experiment
-import importlib
+import json
 import os
-import pytest
+import random
+
 import keras
 import numpy as np
-import random
 import pandas as pd
-import json
+import pytest
 
-import deepprofiler.imaging.cropping
 import deepprofiler.dataset.image_dataset
 import deepprofiler.dataset.metadata
 import deepprofiler.dataset.target
+import deepprofiler.imaging.cropping
 import plugins.models.autoencoder
 
 
@@ -33,11 +32,12 @@ def config(out_dir):
     config["paths"]["root_dir"] = out_dir
     return config
 
+
 @pytest.fixture(scope="function")
 def make_struct(config):
     for key, path in config["paths"].items():
         if key not in ["index", "config_file", "root_dir"]:
-            os.makedirs(path+"/")
+            os.makedirs(path + "/")
     return
 
 
@@ -59,14 +59,15 @@ def metadata(out_dir, make_struct):
     meta = deepprofiler.dataset.metadata.Metadata(filename)
     train_rule = lambda data: data["Split"].astype(int) == 0
     val_rule = lambda data: data["Split"].astype(int) == 1
-    meta.splitMetadata(train_rule, val_rule)
+    meta.split_metadata(train_rule, val_rule)
     return meta
 
 
 @pytest.fixture(scope="function")
 def dataset(metadata, out_dir, config, make_struct):
     keygen = lambda r: "{}/{}-{}".format(r["Metadata_Plate"], r["Metadata_Well"], r["Metadata_Site"])
-    dset = deepprofiler.dataset.image_dataset.ImageDataset(metadata, "Sampling", ["R", "G", "B"], config["paths"]["root_dir"], keygen)
+    dset = deepprofiler.dataset.image_dataset.ImageDataset(metadata, "Sampling", ["R", "G", "B"],
+                                                           config["paths"]["root_dir"], keygen)
     target = deepprofiler.dataset.target.MetadataColumnTarget("Class", metadata.data["Class"].unique())
     dset.add_target(target)
     return dset

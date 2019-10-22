@@ -1,11 +1,10 @@
 import numpy as np
-import pytest
 import tensorflow as tf
 
 import deepprofiler.imaging.augmentations
 
 config = tf.ConfigProto(
-    device_count = {'GPU': 0}
+    device_count={'GPU': 0}
 )
 
 

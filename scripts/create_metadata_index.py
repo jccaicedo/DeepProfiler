@@ -1,14 +1,17 @@
-import pandas as pd
+import argparse
 import json
 import os
 import sys
-import argparse
+
+import pandas as pd
+
 
 def relative_paths(df, target, path, filename, root):
     df[target] = df[path].str.replace(root, "") + "/" + df[filename]
     return df.drop([path, filename], axis=1)
 
-def print_progress (iteration, total, prefix="Progress", suffix="Complete", decimals=1, barLength=50):
+
+def print_progress(iteration, total, prefix="Progress", suffix="Complete", decimals=1, barLength=50):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -18,18 +21,18 @@ def print_progress (iteration, total, prefix="Progress", suffix="Complete", deci
         suffix      - Optional  : suffix string (Str)
         decimals    - Optional  : positive number of decimals in percent complete (Int)
         barLength   - Optional  : character length of bar (Int)
-    """ 
-    if all(t >= 0 for t in [iteration,total,barLength]) and iteration <= total:
-        formatStr       = "{0:." + str(decimals) + "f}"
-        percents        = formatStr.format(100 * (iteration / float(total)))
-        filledLength    = int(round(barLength * iteration / float(total)))
-        bar             = "#" * filledLength + "-" * (barLength - filledLength)
+    """
+    if all(t >= 0 for t in [iteration, total, barLength]) and iteration <= total:
+        formatStr = "{0:." + str(decimals) + "f}"
+        percents = formatStr.format(100 * (iteration / float(total)))
+        filledLength = int(round(barLength * iteration / float(total)))
+        bar = "#" * filledLength + "-" * (barLength - filledLength)
         sys.stdout.write("\r%s |%s| %s%s %s" % (prefix, bar, percents, "%", suffix)),
         sys.stdout.flush()
         if iteration == total:
             sys.stdout.write("\n")
             sys.stdout.flush()
-    elif sum([iteration<0,total<0,barLength<0]) > 1:
+    elif sum([iteration < 0, total < 0, barLength < 0]) > 1:
         sys.stdout.write("\rError: print_progress() function received multiple negative values.")
         sys.stdout.flush()
     elif iteration < 0:
@@ -42,8 +45,10 @@ def print_progress (iteration, total, prefix="Progress", suffix="Complete", deci
         sys.stdout.write("\rError: print_progress() function received a negative 'barLength' value.")
         sys.stdout.flush()
     elif iteration > total:
-        sys.stdout.write("\rError: print_progress() function received an 'iteration' value greater than the 'total' value.")
+        sys.stdout.write(
+            "\rError: print_progress() function received an 'iteration' value greater than the 'total' value.")
         sys.stdout.flush()
+
 
 def parse_delimiter(delimiter):
     if delimiter == "blanks":
@@ -52,6 +57,7 @@ def parse_delimiter(delimiter):
         return "\t"
     else:
         return ","
+
 
 class Metadata():
 
@@ -75,11 +81,12 @@ class Metadata():
         delimiter = parse_delimiter(delim)
         with open(filename, "r") as filelist:
             for line in filelist:
-                csvPath = line.replace("\n","")
+                csvPath = line.replace("\n", "")
                 print("Reading from", csvPath)
-                frames.append( pd.read_csv(csvPath, delimiter, dtype=dtype, keep_default_na=False) )
+                frames.append(pd.read_csv(csvPath, delimiter, dtype=dtype, keep_default_na=False))
         self.data = pd.concat(frames)
         print("Multiple CSV files loaded")
+
 
 parser = argparse.ArgumentParser(description="Create metadata index")
 parser.add_argument("config", help="The path to the configuration file")
@@ -92,7 +99,7 @@ with open(options.config, "r") as f:
 
 # Load plate maps dataset and create labels
 plate_maps = Metadata(
-    config["metadata"]["path"]+config["metadata"]["plate_maps"],
+    config["metadata"]["path"] + config["metadata"]["plate_maps"],
     "multi",
     config["metadata"]["platemap_separator"]
 )
@@ -112,7 +119,7 @@ for i in range(len(label_values)):
 
 # Load barcodes and csv files
 barcodes = Metadata(config["metadata"]["barcode_file"], "single")
-load_data = Metadata(config["metadata"]["path"]+config["metadata"]["csv_list"], "multi")
+load_data = Metadata(config["metadata"]["path"] + config["metadata"]["csv_list"], "multi")
 
 # Merge two frames: csvs + barcodes to attach labels to each image
 columns = list(load_data.data.columns.values)
@@ -146,7 +153,7 @@ metadata = pd.merge(
 )
 
 # Remove unnecessary columns from the index
-required_columns = ["Metadata_Plate","Metadata_Well","Metadata_Site","Assay_Plate_Barcode","Plate_Map_Name"]
+required_columns = ["Metadata_Plate", "Metadata_Well", "Metadata_Site", "Assay_Plate_Barcode", "Plate_Map_Name"]
 required_columns += config["metadata"]["channels"] + [treatment_name]
 available_columns = list(metadata.columns.values)
 columns_to_remove = [c for c in available_columns if c not in required_columns]
@@ -166,12 +173,14 @@ for i in range(len(label_values)):
         mask2 = metadata["plate_well"] == wells[j]
         metadata.loc[mask1 & mask2, replicate_field] = replicate
         replicate += 1
-    try: replicate_distribution[replicate-1] += 1
-    except: replicate_distribution[replicate-1] = 1
+    try:
+        replicate_distribution[replicate - 1] += 1
+    except:
+        replicate_distribution[replicate - 1] = 1
 metadata = metadata.drop(["plate_well"], axis=1)
 print(replicate_distribution)
 
 # Save resulting metadata
-metadata.to_csv(config["metadata"]["path"]+"metadata.csv", index=False)
-dframe = pd.DataFrame({"ID":pd.Series(range(len(label_values))), "Treatment":pd.Series(label_values)})
-dframe.to_csv(config["metadata"]["path"]+"labels.csv", index=False)
+metadata.to_csv(config["metadata"]["path"] + "metadata.csv", index=False)
+dframe = pd.DataFrame({"ID": pd.Series(range(len(label_values))), "Treatment": pd.Series(label_values)})
+dframe.to_csv(config["metadata"]["path"] + "labels.csv", index=False)

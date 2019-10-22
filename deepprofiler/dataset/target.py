@@ -1,4 +1,3 @@
-
 class MetadataColumnTarget(object):
 
     def __init__(self, field_name, values):

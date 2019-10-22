@@ -3,18 +3,12 @@
 - [Densely Connected Convolutional Networks](https://arxiv.org/pdf/1608.06993.pdf)
 - [The One Hundred Layers Tiramisu: Fully Convolutional DenseNets for Semantic Segmentation](https://arxiv.org/pdf/1611.09326.pdf)
 '''
-from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import division
-
-import warnings
-
-from comet_ml import Experiment
-
+from __future__ import print_function
 
 import keras
 import keras.applications
-import tensorflow as tf
 
 from deepprofiler.learning.model import DeepProfilerModel
 
@@ -28,12 +22,11 @@ def define_model(config, dset):
     )
     input_image = keras.layers.Input(input_shape)
 
-
     model = keras.applications.DenseNet121(
-         input_shape=input_shape, 
-         classes=dset.targets[0].shape[1], 
-         input_tensor=input_image,
-         weights=None
+        input_shape=input_shape,
+        classes=dset.targets[0].shape[1],
+        input_tensor=input_image,
+        weights=None
     )
 
     # TODO: factorize the multi-target output model
@@ -46,8 +39,8 @@ def define_model(config, dset):
 
     return model, optimizer, loss_func
 
+
 class ModelClass(DeepProfilerModel):
     def __init__(self, config, dset, generator, val_generator):
         super(ModelClass, self).__init__(config, dset, generator, val_generator)
         self.feature_model, self.optimizer, self.loss = define_model(config, dset)
-

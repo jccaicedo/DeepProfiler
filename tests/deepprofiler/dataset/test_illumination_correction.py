@@ -1,10 +1,9 @@
-import deepprofiler.dataset.illumination_correction
 import numpy
-import numpy.testing
 import numpy.random
+import numpy.testing
 import pytest
-import skimage.exposure
-import skimage.util
+
+import deepprofiler.dataset.illumination_correction
 
 
 @pytest.fixture(scope="function")
@@ -43,14 +42,13 @@ def test_init(corrector, mean_image):
 def test_channel_function(corrector):
     numpy.random.seed(8)
 
-    mean_image = numpy.random.uniform(low=0.0, high=255.0, size=(16,16))
+    mean_image = numpy.random.uniform(low=0.0, high=255.0, size=(16, 16))
 
     result = corrector.channel_function(mean_image, 3)
 
     assert result.shape == (24, 24)
 
     assert numpy.all(result >= 1)
-
 
 
 # def test_compute_all(corrector, mocker):  # Juan can remove mocker, it is a fun experiment
@@ -65,7 +63,6 @@ def test_channel_function(corrector):
 #     corrector.channel_function.assert_called_with(mocker.ANY, 1.5)  # TODO: Claire feels bad about mocker.ANY
 #
 #     assert not numpy.all(corrector.illum_corr_func == 0)
-
 
 
 def test_apply(corrector):

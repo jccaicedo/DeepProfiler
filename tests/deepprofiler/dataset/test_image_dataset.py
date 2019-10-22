@@ -2,13 +2,14 @@ import json
 import os
 import random
 
-import deepprofiler.dataset.image_dataset
-import deepprofiler.dataset.metadata
-import deepprofiler.dataset.target
 import numpy as np
 import pandas as pd
 import pytest
 import skimage.io
+
+import deepprofiler.dataset.image_dataset
+import deepprofiler.dataset.metadata
+import deepprofiler.dataset.target
 
 
 def __rand_array():
@@ -19,6 +20,7 @@ def __rand_array():
 def out_dir(tmpdir):
     return os.path.abspath(tmpdir.mkdir("test"))
 
+
 @pytest.fixture(scope="function")
 def config(out_dir):
     with open("tests/files/config/test.json", "r") as f:
@@ -28,11 +30,12 @@ def config(out_dir):
     config["paths"]["root_dir"] = out_dir
     return config
 
+
 @pytest.fixture(scope="function")
 def make_struct(config):
     for key, path in config["paths"].items():
         if key not in ["index", "config_file", "root_dir"]:
-            os.makedirs(path+"/")
+            os.makedirs(path + "/")
     return
 
 
@@ -54,14 +57,15 @@ def metadata(out_dir, make_struct, config):
     meta = deepprofiler.dataset.metadata.Metadata(filename)
     train_rule = lambda data: data["Split"].astype(int) == 0
     val_rule = lambda data: data["Split"].astype(int) == 1
-    meta.splitMetadata(train_rule, val_rule)
+    meta.split_metadata(train_rule, val_rule)
     return meta
 
 
 @pytest.fixture(scope="function")
 def dataset(metadata, config, make_struct):
     keygen = lambda r: "{}/{}-{}".format(r["Metadata_Plate"], r["Metadata_Well"], r["Metadata_Site"])
-    return deepprofiler.dataset.image_dataset.ImageDataset(metadata, "Sampling", ["R", "G", "B"], config["paths"]["root_dir"], keygen)
+    return deepprofiler.dataset.image_dataset.ImageDataset(metadata, "Sampling", ["R", "G", "B"],
+                                                           config["paths"]["root_dir"], keygen)
 
 
 def test_init(metadata, out_dir, dataset, config, make_struct):
@@ -79,7 +83,7 @@ def test_init(metadata, out_dir, dataset, config, make_struct):
 
 def test_get_image_paths(metadata, out_dir, dataset, config, make_struct):
     for idx, row in dataset.meta.data.iterrows():
-        key, image, outlines = dataset.getImagePaths(row)
+        key, image, outlines = dataset.get_image_paths(row)
         testKey = dataset.keyGen(row)
         testImage = [dataset.root + "/" + row[ch] for ch in dataset.channels]
         testOutlines = dataset.outlines
@@ -90,7 +94,7 @@ def test_get_image_paths(metadata, out_dir, dataset, config, make_struct):
 
 def test_sample_images(metadata, out_dir, dataset, config, make_struct):
     n = 3
-    keys, images, targets, outlines = dataset.sampleImages(dataset.sampling_values, n)
+    keys, images, targets, outlines = dataset.sample_images(dataset.sampling_values, n)
     print(keys, images, targets, outlines)
     assert len(keys) == 2 * n
     assert len(images) == 2 * n
@@ -105,7 +109,7 @@ def test_get_train_batch(metadata, out_dir, dataset, config, make_struct):
         skimage.io.imsave(os.path.join(out_dir, dataset.meta.data["G"][i // 3]), images[:, :, i + 1])
         skimage.io.imsave(os.path.join(out_dir, dataset.meta.data["B"][i // 3]), images[:, :, i + 2])
     batch_size = 3
-    batch = dataset.getTrainBatch(batch_size)
+    batch = dataset.get_train_batch(batch_size)
     assert len(batch) == batch_size
     for image in batch["images"]:
         assert image.shape == (128, 128, 3)
@@ -152,7 +156,8 @@ def test_add_target(metadata, out_dir, dataset, config, make_struct):
 
 def test_read_dataset(metadata, out_dir, dataset, config, make_struct):
     dset = deepprofiler.dataset.image_dataset.read_dataset(config)
-    pd.testing.assert_frame_equal(dset.meta.data, deepprofiler.dataset.metadata.Metadata(config["paths"]["index"], dtype=None).data)
+    pd.testing.assert_frame_equal(dset.meta.data,
+                                  deepprofiler.dataset.metadata.Metadata(config["paths"]["index"], dtype=None).data)
     assert dset.channels == config["dataset"]["images"]["channels"]
     assert dset.root == config["paths"]["images"]
     assert dset.sampling_field == config["train"]["sampling"]["field"]

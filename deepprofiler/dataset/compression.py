@@ -1,24 +1,26 @@
+import os.path
 import pickle as pickle
 
 import numpy
 import scipy.stats
-import skimage.transform
-import os.path
 import skimage
+import skimage.exposure
 import skimage.io
+import skimage.transform
 
-import deepprofiler.dataset.utils
 import deepprofiler.dataset.illumination_statistics
 import deepprofiler.dataset.image_dataset
+import deepprofiler.dataset.utils
+
 
 def png_dir(output_dir, plate_name):
     return os.path.join(output_dir, plate_name)
 
-#################################################
-## COMPRESSION OF TIFF IMAGES INTO PNGs
-#################################################
 
-class Compress():
+# COMPRESSION OF TIFF IMAGES INTO PNGs
+
+
+class Compress:
     def __init__(self, stats, channels, out_dir):
         self.stats = stats
         self.channels = channels
@@ -29,7 +31,7 @@ class Compress():
         self.target_format = "png"
         self.output_shape = [0, 0]
         self.set_scaling_factor(1.0)
-        self.metadata_control_filter = lambda x:False
+        self.metadata_control_filter = lambda x: False
         self.controls_distribution = numpy.zeros((len(channels), 2 ** 8), dtype=numpy.float64)
 
     # Allows to recalculate the percentiles computed by default in the ImageStatistics class
@@ -37,7 +39,7 @@ class Compress():
         print("Percentiles for the", side, " >> ", end="")
         self.stats[side] = numpy.zeros((len(self.channels)))
         for i in range(len(self.channels)):
-            probs = self.stats["histogram"][i]/self.stats["histogram"][i].sum()
+            probs = self.stats["histogram"][i] / self.stats["histogram"][i].sum()
             cum = numpy.cumsum(probs)
             pos = cum > p
             self.stats[side][i] = numpy.argmax(pos)
@@ -62,8 +64,8 @@ class Compress():
         self.output_shape[0] = int(factor * self.stats["original_size"][0])
         self.output_shape[1] = int(factor * self.stats["original_size"][1])
 
-    def target_path(self, origPath):
-        image_name = origPath.split("/")[-1]
+    def target_path(self, orig_path):
+        image_name = orig_path.split("/")[-1]
         image_name = image_name.replace(self.source_format, self.target_format)
         filename = os.path.join(self.out_dir, image_name)
         deepprofiler.dataset.utils.check_path(filename)
@@ -96,13 +98,12 @@ class Compress():
             skimage.io.imsave(self.target_path(meta[self.channels[c]]), image)
         return
 
-    def getUpdatedStats(self):
+    def get_updated_stats(self):
         self.stats["controls_distribution"] = self.controls_distribution
         return self.stats
 
-#################################################
-## COMPRESS IMAGES IN A PLATE
-#################################################
+
+# COMPRESS IMAGES IN A PLATE
 
 def compress_plate(args):
     # Load parameters
@@ -110,15 +111,15 @@ def compress_plate(args):
     plate_name = plate.data.iloc[0]["Metadata_Plate"]
 
     # Dataset configuration
-    statsfile = deepprofiler.dataset.illumination_statistics.illum_stats_filename(config["paths"]["intensities"], plate_name)
-    stats = pickle.load( open(statsfile, "rb") )
-    keyGen = lambda r: "{}/{}-{}".format(r["Metadata_Plate"], r["Metadata_Well"], r["Metadata_Site"])
+    statsfile = deepprofiler.dataset.illumination_statistics.illum_stats_filename(config["paths"]["intensities"],
+                                                                                  plate_name)
+    stats = pickle.load(open(statsfile, "rb"))
     dset = deepprofiler.dataset.image_dataset.ImageDataset(
         plate,
         config["dataset"]["metadata"]["label_field"],
         config["dataset"]["images"]["channels"],
         config["paths"]["images"],
-        keyGen
+        lambda r: "{}/{}-{}".format(r["Metadata_Plate"], r["Metadata_Well"], r["Metadata_Site"])
     )
 
     # Configure compression object
@@ -135,13 +136,12 @@ def compress_plate(args):
     compress.expected = dset.number_of_records("all")
 
     # Setup control samples filter (for computing control illumination statistics)
-    filter_func = lambda x: x[config["dataset"]["metadata"]["label_field"]] == config["dataset"]["metadata"]["control_id"]
-    compress.set_control_samples_filter(filter_func)
+    compress.set_control_samples_filter(lambda x: x[config["dataset"]["metadata"]["label_field"]] == config["dataset"]["metadata"]["control_id"])
 
     # Run compression
     dset.scan(compress.process_image, frame="all")
 
     # Retrieve and store results
-    new_stats = compress.getUpdatedStats()
-    with open(statsfile,"wb") as output:
+    new_stats = compress.get_updated_stats()
+    with open(statsfile, "wb") as output:
         pickle.dump(new_stats, output)

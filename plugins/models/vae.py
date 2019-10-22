@@ -1,5 +1,3 @@
-from comet_ml import Experiment
-
 import keras
 from keras import backend as K
 from keras import objectives
@@ -46,17 +44,20 @@ def define_model(config, dset):
     # Sampling function for latent variable
     def sampling(args):
         z_mean, z_log_sigma = args
-        epsilon = K.random_normal(shape=(config["train"]["model"]["params"]["batch_size"], config["train"]["model"]["params"]["latent_dim"]),
-                                  mean=0., stddev=config["train"]["model"]["params"]["epsilon_std"])
+        epsilon = K.random_normal(
+            shape=(config["train"]["model"]["params"]["batch_size"], config["train"]["model"]["params"]["latent_dim"]),
+            mean=0., stddev=config["train"]["model"]["params"]["epsilon_std"])
         return z_mean + K.exp(z_log_sigma) * epsilon
 
-    z = Lambda(sampling, output_shape=(config["train"]["model"]["params"]["latent_dim"],), name="z")([z_mean, z_log_sigma])
+    z = Lambda(sampling, output_shape=(config["train"]["model"]["params"]["latent_dim"],), name="z")(
+        [z_mean, z_log_sigma])
     encoder = Model(input_image, z_mean)
 
     # Define decoder
     decoder_input = Input((config["train"]["model"]["params"]["latent_dim"],))
     decoder_layers = []
-    decoder_layers.append(Dense(flattened_shape[0], activation="relu", input_shape=(config["train"]["model"]["params"]["latent_dim"],)))
+    decoder_layers.append(
+        Dense(flattened_shape[0], activation="relu", input_shape=(config["train"]["model"]["params"]["latent_dim"],)))
     decoder_layers.append(Reshape(encoded_shape))
     for i in reversed(range(config["train"]["model"]["params"]["conv_blocks"])):
         decoder_layers.extend([

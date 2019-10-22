@@ -1,8 +1,8 @@
-import deepprofiler.dataset.target
-import numpy as np
+from random import sample, shuffle
+
 import pytest
 
-from random import sample, shuffle
+import deepprofiler.dataset.target
 
 
 @pytest.fixture(scope="function")

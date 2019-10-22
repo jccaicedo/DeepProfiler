@@ -1,6 +1,6 @@
+import json
 import os
 import random
-import json
 
 import numpy as np
 import pandas as pd
@@ -33,11 +33,12 @@ def config(out_dir):
     config["paths"]["root_dir"] = out_dir
     return config
 
+
 @pytest.fixture(scope="function")
 def make_struct(config):
     for key, path in config["paths"].items():
         if key not in ["index", "config_file", "root_dir"]:
-            os.makedirs(path+"/")
+            os.makedirs(path + "/")
     return
 
 
@@ -59,22 +60,25 @@ def metadata(out_dir, make_struct):
     meta = deepprofiler.dataset.metadata.Metadata(filename)
     train_rule = lambda data: data["Split"].astype(int) == 0
     val_rule = lambda data: data["Split"].astype(int) == 1
-    meta.splitMetadata(train_rule, val_rule)
+    meta.split_metadata(train_rule, val_rule)
     return meta
 
 
 @pytest.fixture(scope="function")
 def dataset(metadata, out_dir, config, make_struct):
     keygen = lambda r: "{}/{}-{}".format(r["Metadata_Plate"], r["Metadata_Well"], r["Metadata_Site"])
-    dset = deepprofiler.dataset.image_dataset.ImageDataset(metadata, "Sampling", ["R", "G", "B"], config["paths"]["root_dir"], keygen)
+    dset = deepprofiler.dataset.image_dataset.ImageDataset(metadata, "Sampling", ["R", "G", "B"],
+                                                           config["paths"]["root_dir"], keygen)
     target = deepprofiler.dataset.target.MetadataColumnTarget("Class", metadata.data["Class"].unique())
     dset.add_target(target)
     return dset
 
 
 def test_autoencoder_crop_generator():
-    assert issubclass(plugins.crop_generators.autoencoder_crop_generator.GeneratorClass, deepprofiler.imaging.cropping.CropGenerator)
-    assert issubclass(plugins.crop_generators.autoencoder_crop_generator.SingleImageGeneratorClass, deepprofiler.imaging.cropping.SingleImageCropGenerator)
+    assert issubclass(plugins.crop_generators.autoencoder_crop_generator.GeneratorClass,
+                      deepprofiler.imaging.cropping.CropGenerator)
+    assert issubclass(plugins.crop_generators.autoencoder_crop_generator.SingleImageGeneratorClass,
+                      deepprofiler.imaging.cropping.SingleImageCropGenerator)
 
 
 def test_generator_class_generate(config, dataset, out_dir):

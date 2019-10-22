@@ -38,11 +38,15 @@
     "steps": 10,
     "minibatch": 16,
     "targets": [
-        "Compound_Concentration"
+      "Compound_Concentration"
     ],
     "split_field": "Replicate",
-    "training_values": [1],
-    "validation_values": [2],
+    "training_values": [
+      1
+    ],
+    "validation_values": [
+      2
+    ],
     "learning_rate": 0.0001,
     "output": "deepprofiler/examples/experiments/test/"
   },

@@ -1,8 +1,6 @@
-from comet_ml import Experiment
-
 import keras
 from keras.layers import *
-from keras.models import Model, Sequential
+from keras.models import Model
 from keras.optimizers import Adam
 
 from deepprofiler.learning.model import DeepProfilerModel

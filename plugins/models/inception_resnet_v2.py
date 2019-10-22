@@ -1,10 +1,9 @@
-from comet_ml import Experiment
-from keras.applications import inception_resnet_v2
-from keras.models import Model
-from keras.layers import Input, Dense
-from keras.optimizers import Adam
-from keras import backend as K
 import tensorflow as tf
+from keras import backend as K
+from keras.applications import inception_resnet_v2
+from keras.layers import Input, Dense
+from keras.models import Model
+from keras.optimizers import Adam
 
 from deepprofiler.learning.model import DeepProfilerModel
 
@@ -15,7 +14,7 @@ def define_model(config, dset):
     configuration.gpu_options.allow_growth = True
     sess = tf.Session(config=configuration)
     K.set_session(sess)
-    
+
     # Load InceptionResnetV2 base architecture
     if config["profile"]["pretrained"]:
         weights = None

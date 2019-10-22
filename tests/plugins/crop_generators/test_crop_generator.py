@@ -1,5 +1,3 @@
-import pytest
-
 import deepprofiler.imaging.cropping
 import plugins.crop_generators.crop_generator
 

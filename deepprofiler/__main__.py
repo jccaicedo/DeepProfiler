@@ -4,15 +4,15 @@ import os
 import click
 
 import deepprofiler.dataset.compression
+import deepprofiler.dataset.illumination_statistics
+import deepprofiler.dataset.image_dataset
 import deepprofiler.dataset.image_dataset
 import deepprofiler.dataset.indexing
-import deepprofiler.dataset.illumination_statistics
 import deepprofiler.dataset.metadata
 import deepprofiler.dataset.utils
-import deepprofiler.dataset.image_dataset
-import deepprofiler.learning.training
-import deepprofiler.learning.profiling
 import deepprofiler.download.normalize_bbbc021_metadata
+import deepprofiler.learning.profiling
+import deepprofiler.learning.training
 
 
 # Main interaction point
@@ -32,7 +32,6 @@ import deepprofiler.download.normalize_bbbc021_metadata
 @click.option("--exp", default="results",
               help="Name of experiment",
               type=click.STRING)
-
 @click.pass_context
 def cli(context, root, config, exp, cores, gpu):
     dirs = {
@@ -52,7 +51,6 @@ def cli(context, root, config, exp, cores, gpu):
         "summaries": root + "/outputs/" + exp + "/summaries/",
         "features": root + "/outputs/" + exp + "/features/"
     }
-
 
     config = dirs["config"] + "/" + config
     context.obj["cores"] = cores
@@ -114,13 +112,15 @@ def download_bbbc021(context):
 @click.pass_context
 def prepare(context):
     metadata = deepprofiler.dataset.metadata.read_plates(context.obj["config"]["paths"]["index"])
-    process = deepprofiler.dataset.utils.Parallel(context.obj["config"], numProcs=context.obj["cores"])
+    process = deepprofiler.dataset.utils.Parallel(context.obj["config"], num_procs=context.obj["cores"])
     process.compute(deepprofiler.dataset.illumination_statistics.calculate_statistics, metadata)
     print("Illumination complete!")
-    metadata = deepprofiler.dataset.metadata.read_plates(context.obj["config"]["paths"]["index"])  # reinitialize generator
+    metadata = deepprofiler.dataset.metadata.read_plates(
+        context.obj["config"]["paths"]["index"])  # reinitialize generator
     process.compute(deepprofiler.dataset.compression.compress_plate, metadata)
     deepprofiler.dataset.indexing.write_compression_index(context.obj["config"])
-    context.parent.obj["config"]["paths"]["index"] = context.obj["config"]["paths"]["compressed_metadata"]+"/compressed.csv"
+    context.parent.obj["config"]["paths"]["index"] = context.obj["config"]["paths"][
+                                                         "compressed_metadata"] + "/compressed.csv"
     print("Compression complete!")
 
 
@@ -131,7 +131,8 @@ def prepare(context):
 @click.pass_context
 def train(context, epoch, seed):
     if context.parent.obj["config"]["prepare"]["compression"]["implement"]:
-        context.parent.obj["config"]["paths"]["index"] = context.obj["config"]["paths"]["compressed_metadata"]+"/compressed.csv"
+        context.parent.obj["config"]["paths"]["index"] = context.obj["config"]["paths"][
+                                                             "compressed_metadata"] + "/compressed.csv"
         context.parent.obj["config"]["paths"]["images"] = context.obj["config"]["paths"]["compressed_images"]
     metadata = deepprofiler.dataset.image_dataset.read_dataset(context.obj["config"])
     deepprofiler.learning.training.learn_model(context.obj["config"], metadata, epoch, seed)
@@ -141,12 +142,13 @@ def train(context, epoch, seed):
 @cli.command()
 @click.pass_context
 @click.option("--part",
-              help="Part of index to process", 
-              default=-1, 
+              help="Part of index to process",
+              default=-1,
               type=click.INT)
 def profile(context, part):
     if context.parent.obj["config"]["prepare"]["compression"]["implement"]:
-        context.parent.obj["config"]["paths"]["index"] = context.obj["config"]["paths"]["compressed_metadata"]+"/compressed.csv"
+        context.parent.obj["config"]["paths"]["index"] = context.obj["config"]["paths"][
+                                                             "compressed_metadata"] + "/compressed.csv"
         context.parent.obj["config"]["paths"]["images"] = context.obj["config"]["paths"]["compressed_images"]
     config = context.obj["config"]
     if part >= 0:
@@ -154,17 +156,21 @@ def profile(context, part):
         config["paths"]["index"] = context.obj["config"]["paths"]["index"].replace("index.csv", partfile)
     metadata = deepprofiler.dataset.image_dataset.read_dataset(context.obj["config"])
     deepprofiler.learning.profiling.profile(context.obj["config"], metadata)
-    
+
+
 ""
+
+
 # Auxiliary tool: Split index in multiple parts
 @cli.command()
 @click.pass_context
-@click.option("--parts", 
+@click.option("--parts",
               help="Number of parts to split the index",
               type=click.INT)
 def split(context, parts):
     if context.parent.obj["config"]["prepare"]["compression"]["implement"]:
-        context.parent.obj["config"]["paths"]["index"] = context.obj["config"]["paths"]["compressed_metadata"]+"/compressed.csv"
+        context.parent.obj["config"]["paths"]["index"] = context.obj["config"]["paths"][
+                                                             "compressed_metadata"] + "/compressed.csv"
         context.parent.obj["config"]["paths"]["images"] = context.obj["config"]["paths"]["compressed_images"]
     deepprofiler.dataset.indexing.split_index(context.obj["config"], parts)
 

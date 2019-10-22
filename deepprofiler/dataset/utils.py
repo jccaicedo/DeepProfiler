@@ -1,14 +1,15 @@
+import logging
+import multiprocessing
 import os
 import sys
 import time
-import logging
-import multiprocessing
 
 PI = 3.1415926539
 
+
 # From: http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
 # Print iterations progress
-def print_progress (iteration, total, prefix="Progress", suffix="Complete", decimals=1, barLength=50):
+def print_progress(iteration, total, prefix="Progress", suffix="Complete", decimals=1, barLength=50):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -18,18 +19,18 @@ def print_progress (iteration, total, prefix="Progress", suffix="Complete", deci
         suffix      - Optional  : suffix string (Str)
         decimals    - Optional  : positive number of decimals in percent complete (Int)
         barLength   - Optional  : character length of bar (Int)
-    """ 
-    if all(t >= 0 for t in [iteration,total,barLength]) and iteration <= total:
-        formatStr       = "{0:." + str(decimals) + "f}"
-        percents        = formatStr.format(100 * (iteration / float(total)))
-        filledLength    = int(round(barLength * iteration / float(total)))
-        bar             = "#" * filledLength + "-" * (barLength - filledLength)
+    """
+    if all(t >= 0 for t in [iteration, total, barLength]) and iteration <= total:
+        format_str = "{0:." + str(decimals) + "f}"
+        percents = format_str.format(100 * (iteration / float(total)))
+        filled_length = int(round(barLength * iteration / float(total)))
+        bar = "#" * filled_length + "-" * (barLength - filled_length)
         sys.stdout.write("\r%s |%s| %s%s %s" % (prefix, bar, percents, "%", suffix)),
         sys.stdout.flush()
         if iteration == total:
             sys.stdout.write("\n")
             sys.stdout.flush()
-    elif sum([iteration<0,total<0,barLength<0]) > 1:
+    elif sum([iteration < 0, total < 0, barLength < 0]) > 1:
         sys.stdout.write("\rError: print_progress() function received multiple negative values.")
         sys.stdout.flush()
     elif iteration < 0:
@@ -42,23 +43,23 @@ def print_progress (iteration, total, prefix="Progress", suffix="Complete", deci
         sys.stdout.write("\rError: print_progress() function received a negative 'barLength' value.")
         sys.stdout.flush()
     elif iteration > total:
-        sys.stdout.write("\rError: print_progress() function received an 'iteration' value greater than the 'total' value.")
+        sys.stdout.write(
+            "\rError: print_progress() function received an 'iteration' value greater than the 'total' value.")
         sys.stdout.flush()
 
-################################################################################
-## Make sure directory exist for storing a file
-################################################################################
+
+# Make sure directory exist for storing a file
 
 def check_path(filename):
-    path = "/".join( filename.split("/")[0:-1] )
+    path = "/".join(filename.split("/")[0:-1])
     os.system("mkdir -p " + path)
 
-################################################################################
-## Timing utilities
-################################################################################
+
+# Timing utilities
 
 def tic():
     return time.time()
+
 
 def toc(msg, beginning):
     end = time.time()
@@ -66,29 +67,27 @@ def toc(msg, beginning):
     print(msg, ": {:.2f} secs".format(elapsed))
     return end
 
-################################################################################
-## Parallel utilities using multiprocessing
-################################################################################
 
-class Parallel():
+# Parallel utilities using multiprocessing
 
-    def __init__(self, fixed_args, numProcs=None):
+class Parallel:
+
+    def __init__(self, fixed_args, num_procs=None):
         self.fixed_args = fixed_args
-        cpus =  multiprocessing.cpu_count()
-        if numProcs is None or numProcs > cpus or numProcs < 1:
-            numProcs = cpus
-        self.pool = multiprocessing.Pool(numProcs)
+        cpus = multiprocessing.cpu_count()
+        if num_procs is None or num_procs > cpus or num_procs < 1:
+            num_procs = cpus
+        self.pool = multiprocessing.Pool(num_procs)
 
     def compute(self, operation, data):
-        iterable = [ [d, self.fixed_args] for d in data ]
+        iterable = [[d, self.fixed_args] for d in data]
         self.pool.map(operation, iterable)
         return
-    
-################################################################################
-## Logging utilities
-################################################################################
 
-class Logger():
+
+# Logging utilities
+
+class Logger:
 
     def __init__(self):
         self.root = logging.getLogger()
@@ -102,9 +101,8 @@ class Logger():
     def log(self, level, msg):
         self.root.log(level, msg)
 
-
     def info(self, msg):
         self.root.info(msg)
 
-logger = Logger()
 
+logger = Logger()

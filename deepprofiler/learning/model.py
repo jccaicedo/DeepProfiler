@@ -1,17 +1,17 @@
+import abc
 import gc
 import os
 import random
-import abc
-
 
 import comet_ml
 import keras
-import numpy as np
-import tensorflow as tf
+import numpy
+import tensorflow
 
 import deepprofiler.dataset.utils
 import deepprofiler.imaging.cropping
 import deepprofiler.learning.validation
+
 
 ##################################################
 # This class should be used as an abstract base
@@ -20,7 +20,6 @@ import deepprofiler.learning.validation
 
 
 class DeepProfilerModel(abc.ABC):
-
     def __init__(self, config, dset, crop_generator, val_crop_generator):
         self.feature_model = None
         self.loss = None
@@ -36,10 +35,13 @@ class DeepProfilerModel(abc.ABC):
     def seed(self, seed):
         self.random_seed = seed
         random.seed(seed)
-        np.random.seed(seed)
-        tf.set_random_seed(seed)
+        numpy.random.seed(seed)
+        tensorflow.set_random_seed(seed)
 
-    def train(self, epoch=1, metrics=["accuracy"], verbose=1):
+    def train(self, epoch=1, metrics=None, verbose=1):
+        if metrics is None:
+            metrics = ["accuracy"]
+
         # Raise ValueError if feature model isn't properly defined
         check_feature_model(self)
         # Print model summary
@@ -50,7 +52,7 @@ class DeepProfilerModel(abc.ABC):
         # Create comet ml experiment
         experiment = setup_comet_ml(self)
         # Create tf configuration
-        configuration = tf_configure(self)
+        configuration = tf_configure()
         # Start train crop generator
         crop_session = start_crop_session(self, configuration)
         # Start val crop generator
@@ -67,7 +69,7 @@ class DeepProfilerModel(abc.ABC):
             callbacks = None
         # Create params (epochs, steps, log model params to comet ml)
 
-        #keras.backend.get_session().run(tf.initialize_all_variables())
+        # keras.backend.get_session().run(tf.initialize_all_variables())
         # Train model
         self.feature_model.fit_generator(
             generator=self.train_crop_generator.generate(crop_session),
@@ -77,8 +79,8 @@ class DeepProfilerModel(abc.ABC):
             verbose=verbose,
             initial_epoch=epoch - 1,
             validation_data=(x_validation, y_validation)
-        ) 
-            
+        )
+
         # Stop threads and close sessions
         close(self, crop_session)
         # Return the feature model and validation data
@@ -104,26 +106,26 @@ def setup_comet_ml(dpmodel):
 
 
 def start_crop_session(dpmodel, configuration):
-    crop_graph = tf.Graph()
+    crop_graph = tensorflow.Graph()
     with crop_graph.as_default():
-#         cpu_config = tf.ConfigProto(device_count={"CPU": 1, "GPU": 0})
-#         cpu_config.gpu_options.visible_device_list = ""
-        crop_session = tf.Session(config=configuration)
+        #         cpu_config = tf.ConfigProto(device_count={"CPU": 1, "GPU": 0})
+        #         cpu_config.gpu_options.visible_device_list = ""
+        crop_session = tensorflow.Session(config=configuration)
         dpmodel.train_crop_generator.start(crop_session)
     gc.collect()
     return crop_session
 
 
-def tf_configure(dpmodel):
-    configuration = tf.ConfigProto()
+def tf_configure():
+    configuration = tensorflow.ConfigProto()
     configuration.gpu_options.allow_growth = True
     return configuration
 
 
 def start_val_session(dpmodel, configuration):
-    crop_graph = tf.Graph()
+    crop_graph = tensorflow.Graph()
     with crop_graph.as_default():
-        val_session = tf.Session(config=configuration)
+        val_session = tensorflow.Session(config=configuration)
         keras.backend.set_session(val_session)
         dpmodel.val_crop_generator.start(val_session)
         x_validation, y_validation = deepprofiler.learning.validation.load_validation_data(
@@ -136,7 +138,7 @@ def start_val_session(dpmodel, configuration):
 
 
 def start_main_session(configuration):
-    main_session = tf.Session(config=configuration)
+    main_session = tensorflow.Session(config=configuration)
     keras.backend.set_session(main_session)
     return main_session
 
@@ -149,7 +151,7 @@ def load_weights(dpmodel, epoch):
         print("Weights from previous model loaded:", previous_model)
     else:
         # Initialize all tf variables to avoid tf bug
-        keras.backend.get_session().run(tf.global_variables_initializer())
+        keras.backend.get_session().run(tensorflow.global_variables_initializer())
 
 
 def setup_callbacks(dpmodel, lr_schedule_epochs, lr_schedule_lr):
@@ -167,6 +169,7 @@ def setup_callbacks(dpmodel, lr_schedule_epochs, lr_schedule_lr):
             return lr_schedule_lr[lr_schedule_epochs.index(epoch)]
         else:
             return lr
+
     if lr_schedule_epochs:
         callback_lr_schedule = keras.callbacks.LearningRateScheduler(lr_schedule, verbose=1)
         callbacks = [callback_model_checkpoint, callback_csv, callback_lr_schedule]

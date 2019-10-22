@@ -1,5 +1,4 @@
-import deepprofiler.imaging.cropping 
-
+import deepprofiler.imaging.cropping
 
 GeneratorClass = deepprofiler.imaging.cropping.CropGenerator
 
